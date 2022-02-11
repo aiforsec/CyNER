@@ -1,0 +1,15 @@
+.DS_Store
+__pycache__/
+*.ipynb_checkpoints
+nohup.out
+.python-version
+*.pyc
+.idea
+build
+*.egg-info
+dist
+
+ckpt*
+vocab
+apex
+cache
