@@ -1,8 +1,8 @@
 # CyNER: Python Library for Cybersecurity Named Entity Recognition
 
-#### TODO: Add summary
+CyNER is a python library for extracting cybersecurity named entities. We combine different models with a priority based merging for extarcting cybersecurity entities: transformer models trained on cybersecurity corpus for cybersecurity-specific entities, regular expression matching for identifying indicators, and NER models from Flair and SpaCy for generic entity types.
 
-### Get Started
+### Getting Started
 `pip install git+https://github.com/aiforsec/CyNER.git`
 
 
