@@ -42,6 +42,8 @@ class CyNER():
                 return True
             if candidate.end -1 >= e.start and candidate.end <= e.end:
                 return True
+            if candidate.start <= e.start and candidate.end >= e.end:
+                return True
         return False
     
     def merge_entities(self,cur_entities, candidate_entities):
