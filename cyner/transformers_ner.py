@@ -1,3 +1,5 @@
+from nltk.tokenize.punkt import PunktSentenceTokenizer as pt
+
 from .entity_extraction import EntityExtraction
 from .entity import Entity
 from .tner import TrainTransformersNER
@@ -52,13 +54,22 @@ class TransformersNER(EntityExtraction):
     def get_entities(self, text):
         if self.classifier is None:
             self.classifier = PredictTransformersNER(self.config.get('model', 'xlm-roberta-base'))
-        ret = self.classifier.predict([text])
+            
+        spans = list(pt().span_tokenize(text))
+        print(spans)
         entities = []
-        for x in ret[0]['entity']:
-            start, end = x['position']
-            text = x['mention']
-            entity_type = x['type']
-            confidence = x['probability']
-            entities.append(Entity(start, end, text, entity_type, confidence))
+        for span in spans:
+            print(span)
+            sent = text[span[0]: span[1]]
+            print(sent)
+            ret = self.classifier.predict([sent])
+            for x in ret[0]['entity']:
+                start, end = x['position']
+                mention = x['mention']
+                entity_type = x['type']
+                confidence = x['probability']
+                entities.append(Entity(span[0]+start, span[0]+end, mention, entity_type, confidence))
+            
+        
         
         return entities
