@@ -56,20 +56,15 @@ class TransformersNER(EntityExtraction):
             self.classifier = PredictTransformersNER(self.config.get('model', 'xlm-roberta-base'))
             
         spans = list(pt().span_tokenize(text))
-        print(spans)
         entities = []
         for span in spans:
-            print(span)
             sent = text[span[0]: span[1]]
-            print(sent)
             ret = self.classifier.predict([sent])
             for x in ret[0]['entity']:
                 start, end = x['position']
                 mention = x['mention']
                 entity_type = x['type']
                 confidence = x['probability']
-                entities.append(Entity(span[0]+start, span[0]+end, mention, entity_type, confidence))
-            
-        
+                entities.append(Entity(span[0]+start, span[0]+end, mention, entity_type, confidence))   
         
         return entities

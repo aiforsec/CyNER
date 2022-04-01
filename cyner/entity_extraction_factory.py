@@ -3,6 +3,7 @@ from .flair_ner import Flair
 from .spacy_ner import Spacy
 from .heuristics_ner import HeuristicsNER
 from .transformers_ner import TransformersNER
+from .dictionary_ner import DictionaryNER
 
 
 class EntityExtractionFactory:
@@ -20,5 +21,7 @@ class EntityExtractionFactory:
             return HeuristicsNER(config)
         elif name == 'transformers':
             return TransformersNER(config)
+        elif name == 'dictionary':
+            return DictionaryNER(config)
         else:
             raise ValueError('Unknown entity extraction model')

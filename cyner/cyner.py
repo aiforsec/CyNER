@@ -2,8 +2,10 @@ from .entity_extraction_factory import EntityExtractionFactory as eef
 
 
 class CyNER(): 
-    def __init__(self, transformer_model='models/xlm-roberta-base', use_heuristic=True, flair_model='ner', spacy_model=None, priority='HTFS'):
-        self.transformer_ner = eef.get_entity_extraction_model('transformers', {'model': transformer_model})
+    def __init__(self, transformer_model='models/xlm-roberta-base', use_heuristic=True, flair_model='ner', spacy_model=None, dictionary=None, priority='HTFSD'):
+        self.transformer_ner = None
+        if transformer_model:
+            self.transformer_ner = eef.get_entity_extraction_model('transformers', {'model': transformer_model})
         self.heuristic_ner = None
         if use_heuristic:
             self.heuristic_ner = eef.get_entity_extraction_model('heuristics', {})
@@ -13,6 +15,9 @@ class CyNER():
         self.spacy_ner = None
         if spacy_model:
             self.spacy_ner = eef.get_entity_extraction_model('spacy', {'model': spacy_model})
+        self.dictionary_ner = None
+        if dictionary:
+            self.dictionary_ner = eef.get_entity_extraction_model('dictionary', {'file': dictionary})
         self.priority = priority
         
     def get_model_corresponding_to_priority(self, letter):
@@ -24,8 +29,10 @@ class CyNER():
             return self.flair_ner
         elif letter.upper() == 'S':
             return self.spacy_ner
+        elif letter.upper() == 'D':
+            return self.dictionary_ner
         else:
-            raise ValueError('Unknown letter in priority, must be in [HTFS]')
+            raise ValueError('Unknown letter in priority, must be in [HTFSD]')
             
     def construct_priority_model_list(self):
         models = []
