@@ -4,45 +4,56 @@ import random
 import json
 import logging
 from time import time
-from typing import List
+from typing import List, Union
 import transformers
 import torch
 from torch import nn
-from seqeval.metrics import f1_score, precision_score, recall_score, classification_report
+from seqeval.metrics import (
+    f1_score,
+    precision_score,
+    recall_score,
+    classification_report,
+)
 from torch.utils.tensorboard import SummaryWriter
 
 from .get_dataset import get_dataset_ner
 from .checkpoint_versioning import Argument
 from .tokenizer import Transforms, Dataset
 
-logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
+logging.basicConfig(
+    format="%(asctime)s %(levelname)-8s %(message)s",
+    level=logging.INFO,
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 PROGRESS_INTERVAL = 100
 PAD_TOKEN_LABEL_ID = nn.CrossEntropyLoss().ignore_index
 os.environ["TOKENIZERS_PARALLELISM"] = "false"  # to turn off warning
 
-__all__ = 'TrainTransformersNER'
+__all__ = "TrainTransformersNER"
 
 
 class TrainTransformersNER:
-    """ Named-Entity-Recognition (NER) trainer """
+    """Named-Entity-Recognition (NER) trainer"""
 
-    def __init__(self,
-                 checkpoint_dir: str,
-                 dataset: (str, List) = None,
-                 transformers_model: str = 'xlm-roberta-base',
-                 random_seed: int = 1,
-                 lr: float = 1e-5,
-                 epochs: int = 15,
-                 warmup_step: int = 0,
-                 weight_decay: float = 1e-7,
-                 batch_size: int = 32,
-                 max_seq_length: int = 128,
-                 fp16: bool = False,
-                 max_grad_norm: float = 1.0,
-                 lower_case: bool = False,
-                 num_worker: int = 0,
-                 cache_dir: str = None):
-        """ Named-Entity-Recognition (NER) trainer
+    def __init__(
+        self,
+        checkpoint_dir: str,
+        dataset: Union[str, List] = None,
+        transformers_model: str = "xlm-roberta-base",
+        random_seed: int = 1,
+        lr: float = 1e-5,
+        epochs: int = 15,
+        warmup_step: int = 0,
+        weight_decay: float = 1e-7,
+        batch_size: int = 32,
+        max_seq_length: int = 128,
+        fp16: bool = False,
+        max_grad_norm: float = 1.0,
+        lower_case: bool = False,
+        num_worker: int = 0,
+        cache_dir: str = None,
+    ):
+        """Named-Entity-Recognition (NER) trainer
 
          Parameter
         -----------------
@@ -82,7 +93,7 @@ class TrainTransformersNER:
         cache_dir: str
             Cache directory for transformers
         """
-        logging.info('*** initialize network ***')
+        logging.info("*** initialize network ***")
         if num_worker <= 1:
             os.environ["OMP_NUM_THREADS"] = "1"  # to turn off warning message
         self.num_worker = num_worker
@@ -102,7 +113,7 @@ class TrainTransformersNER:
             max_seq_length=max_seq_length,
             fp16=fp16,
             max_grad_norm=max_grad_norm,
-            lower_case=lower_case
+            lower_case=lower_case,
         )
 
         # fix random seed
@@ -118,7 +129,7 @@ class TrainTransformersNER:
         self.scheduler = None
         self.scale_loss = None
         self.n_gpu = torch.cuda.device_count()
-        self.device = 'cuda' if self.n_gpu > 0 else 'cpu'
+        self.device = "cuda" if self.n_gpu > 0 else "cpu"
         self.model = None
         self.transforms = None
         self.__epoch = 1
@@ -128,44 +139,81 @@ class TrainTransformersNER:
         self.__train_called = False
 
     def __setup_model_data(self, dataset, lower_case):
-        """ set up data/language model """
+        """set up data/language model"""
         if self.model is not None:
             return
         if self.args.is_trained:
-            self.model = transformers.AutoModelForTokenClassification.from_pretrained(self.args.transformers_model)
-            self.transforms = Transforms(self.args.transformers_model, cache_dir=self.cache_dir)
+            self.model = transformers.AutoModelForTokenClassification.from_pretrained(
+                self.args.transformers_model
+            )
+            self.transforms = Transforms(
+                self.args.transformers_model, cache_dir=self.cache_dir
+            )
             self.label_to_id = self.model.config.label2id
-            self.dataset_split, self.label_to_id, self.language, self.unseen_entity_set = get_dataset_ner(
-                dataset, label_to_id=self.label_to_id, fix_label_dict=True, lower_case=lower_case)
+            (
+                self.dataset_split,
+                self.label_to_id,
+                self.language,
+                self.unseen_entity_set,
+            ) = get_dataset_ner(
+                dataset,
+                label_to_id=self.label_to_id,
+                fix_label_dict=True,
+                lower_case=lower_case,
+            )
             self.id_to_label = {v: str(k) for k, v in self.label_to_id.items()}
         else:
-            self.dataset_split, self.label_to_id, self.language, self.unseen_entity_set = get_dataset_ner(
-                dataset, lower_case=lower_case)
+            (
+                self.dataset_split,
+                self.label_to_id,
+                self.language,
+                self.unseen_entity_set,
+            ) = get_dataset_ner(dataset, lower_case=lower_case)
             self.id_to_label = {v: str(k) for k, v in self.label_to_id.items()}
             config = transformers.AutoConfig.from_pretrained(
                 self.args.transformers_model,
                 num_labels=len(self.label_to_id),
                 id2label=self.id_to_label,
                 label2id=self.label_to_id,
-                cache_dir=self.cache_dir)
+                cache_dir=self.cache_dir,
+            )
 
             self.model = transformers.AutoModelForTokenClassification.from_pretrained(
-                self.args.transformers_model, config=config)
+                self.args.transformers_model, config=config
+            )
 
-            self.transforms = Transforms(self.args.transformers_model, cache_dir=self.cache_dir)
+            self.transforms = Transforms(
+                self.args.transformers_model, cache_dir=self.cache_dir
+            )
 
         # optimizer
         no_decay = ["bias", "LayerNorm.weight"]
         optimizer_grouped_parameters = [
-            {"params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
-             "weight_decay": self.args.weight_decay},
-            {"params": [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
-             "weight_decay": 0.0}]
-        self.optimizer = transformers.AdamW(optimizer_grouped_parameters, lr=self.args.lr, eps=1e-8)
+            {
+                "params": [
+                    p
+                    for n, p in self.model.named_parameters()
+                    if not any(nd in n for nd in no_decay)
+                ],
+                "weight_decay": self.args.weight_decay,
+            },
+            {
+                "params": [
+                    p
+                    for n, p in self.model.named_parameters()
+                    if any(nd in n for nd in no_decay)
+                ],
+                "weight_decay": 0.0,
+            },
+        ]
+        self.optimizer = transformers.AdamW(
+            optimizer_grouped_parameters, lr=self.args.lr, eps=1e-8
+        )
 
         # scheduler
         self.scheduler = transformers.get_constant_schedule_with_warmup(
-            self.optimizer, num_warmup_steps=self.args.warmup_step)
+            self.optimizer, num_warmup_steps=self.args.warmup_step
+        )
 
         # GPU allocation
         self.model.to(self.device)
@@ -174,49 +222,68 @@ class TrainTransformersNER:
         if self.args.fp16:
             try:
                 from apex import amp  # noqa: F401
+
                 self.model, self.optimizer = amp.initialize(
-                    self.model, self.optimizer, opt_level='O1', max_loss_scale=2 ** 13, min_loss_scale=1e-5)
+                    self.model,
+                    self.optimizer,
+                    opt_level="O1",
+                    max_loss_scale=2**13,
+                    min_loss_scale=1e-5,
+                )
                 self.master_params = amp.master_params
                 self.scale_loss = amp.scale_loss
-                logging.info('using `apex.amp`')
+                logging.info("using `apex.amp`")
             except ImportError:
-                logging.exception("Skip apex: please install apex from https://www.github.com/nvidia/apex to use fp16")
+                logging.exception(
+                    "Skip apex: please install apex from https://www.github.com/nvidia/apex to use fp16"
+                )
 
         # multi-gpus
         if self.n_gpu > 1:
             # multi-gpu training (should be after apex fp16 initialization)
             self.model = torch.nn.DataParallel(self.model.cuda())
-            logging.info('using `torch.nn.DataParallel`')
-        logging.info('running on %i GPUs' % self.n_gpu)
+            logging.info("using `torch.nn.DataParallel`")
+        logging.info("running on %i GPUs" % self.n_gpu)
 
     def __setup_loader(self, data_type: str, batch_size: int, max_seq_length: int):
-        """ setup data loader """
-        assert self.dataset_split, 'run __setup_data firstly'
+        """setup data loader"""
+        assert self.dataset_split, "run __setup_data firstly"
         if data_type not in self.dataset_split.keys():
             return None
-        is_train = data_type == 'train'
+        is_train = data_type == "train"
         features = self.transforms.encode_plus_all(
-            tokens=self.dataset_split[data_type]['data'],
-            labels=self.dataset_split[data_type]['label'],
+            tokens=self.dataset_split[data_type]["data"],
+            labels=self.dataset_split[data_type]["label"],
             language=self.language,
-            max_length=max_seq_length)
+            max_length=max_seq_length,
+        )
         data_obj = Dataset(features)
 
         if is_train:
-            assert len(data_obj) >= batch_size, 'training data only has {0} entries and batch size' \
-                                                'exceeded {0} < {1}, please make sure the batch size ' \
-                                                'is at least less than the entire training data size.'.format(
-                len(data_obj), batch_size)
+            assert len(data_obj) >= batch_size, (
+                "training data only has {0} entries and batch size"
+                "exceeded {0} < {1}, please make sure the batch size "
+                "is at least less than the entire training data size.".format(
+                    len(data_obj), batch_size
+                )
+            )
         return torch.utils.data.DataLoader(
-            data_obj, num_workers=self.num_worker, batch_size=batch_size, shuffle=is_train, drop_last=is_train)
+            data_obj,
+            num_workers=self.num_worker,
+            batch_size=batch_size,
+            shuffle=is_train,
+            drop_last=is_train,
+        )
 
-    def test(self,
-             test_dataset: str = None,
-             entity_span_prediction: bool = False,
-             lower_case: bool = False,
-             batch_size_validation: int = None,
-             max_seq_length_validation: int = None):
-        """ Test NER model on specific dataset
+    def test(
+        self,
+        test_dataset: str = None,
+        entity_span_prediction: bool = False,
+        lower_case: bool = False,
+        batch_size_validation: int = None,
+        max_seq_length_validation: int = None,
+    ):
+        """Test NER model on specific dataset
 
          Parameter
         -------------
@@ -228,52 +295,69 @@ class TrainTransformersNER:
             Converting test data into lower-cased
         """
         # setup model/dataset/data loader
-        assert self.args.is_trained, 'finetune model before'
+        assert self.args.is_trained, "finetune model before"
         if test_dataset is None:
             assert len(self.args.dataset) == 1, "test dataset can not be determined"
             dataset = self.args.dataset[0]
         else:
             dataset = test_dataset
-        filename = 'test_{}{}{}.json'.format(
-            os.path.basename(dataset) if 'panx' not in dataset else dataset.replace('/', '-'),
-            '_span' if entity_span_prediction else '',
-            '_lower' if lower_case else '')
+        filename = "test_{}{}{}.json".format(
+            os.path.basename(dataset)
+            if "panx" not in dataset
+            else dataset.replace("/", "-"),
+            "_span" if entity_span_prediction else "",
+            "_lower" if lower_case else "",
+        )
         filename = os.path.join(self.args.checkpoint_dir, filename)
         if os.path.exists(filename):
             return
         assert type(dataset) is str
-        batch_size = batch_size_validation if batch_size_validation else self.args.batch_size
-        max_seq_length = max_seq_length_validation if max_seq_length_validation else self.args.max_seq_length
+        batch_size = (
+            batch_size_validation if batch_size_validation else self.args.batch_size
+        )
+        max_seq_length = (
+            max_seq_length_validation
+            if max_seq_length_validation
+            else self.args.max_seq_length
+        )
         self.__setup_model_data(dataset, lower_case)
 
-        if 'train' in self.dataset_split.keys():
-            self.dataset_split.pop('train')
+        if "train" in self.dataset_split.keys():
+            self.dataset_split.pop("train")
 
-        data_loader = {k: self.__setup_loader(k, batch_size, max_seq_length) for k in self.dataset_split.keys()}
+        data_loader = {
+            k: self.__setup_loader(k, batch_size, max_seq_length)
+            for k in self.dataset_split.keys()
+        }
 
-        logging.info('testing model on {}'.format(dataset))
-        logging.info('data_loader: {}'.format(str(list(data_loader.keys()))))
+        logging.info("testing model on {}".format(dataset))
+        logging.info("data_loader: {}".format(str(list(data_loader.keys()))))
 
         # run inference
         start_time = time()
         metrics = {}
-        params = dict(entity_span_prediction=entity_span_prediction, unseen_entity_set=self.unseen_entity_set)
+        params = dict(
+            entity_span_prediction=entity_span_prediction,
+            unseen_entity_set=self.unseen_entity_set,
+        )
         for k, v in data_loader.items():
-            assert v is not None, '{} data split is not found'.format(k)
+            assert v is not None, "{} data split is not found".format(k)
             metrics[k] = self.__epoch_valid(v, prefix=k, **params)
             self.release_cache()
 
         # export result
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             json.dump(metrics, f)
-        logging.info('[test completed, %0.2f sec in total]' % (time() - start_time))
-        logging.info('export metrics at: {}'.format(filename))
+        logging.info("[test completed, %0.2f sec in total]" % (time() - start_time))
+        logging.info("export metrics at: {}".format(filename))
 
-    def train(self,
-              monitor_validation: bool = False,
-              batch_size_validation: int = 1,
-              max_seq_length_validation: int = 128):
-        """ Train NER model
+    def train(
+        self,
+        monitor_validation: bool = False,
+        batch_size_validation: int = 1,
+        max_seq_length_validation: int = 128,
+    ):
+        """Train NER model
 
          Parameter
         -------------
@@ -288,81 +372,109 @@ class TrainTransformersNER:
         if self.__train_called:
             raise ValueError("`train` can be called once per instant")
         if self.args.is_trained:
-            logging.warning('finetuning model, that has been already finetuned')
+            logging.warning("finetuning model, that has been already finetuned")
         self.__setup_model_data(self.args.dataset, self.args.lower_case)
         writer = SummaryWriter(log_dir=self.args.checkpoint_dir)
 
-        data_loader = {'train': self.__setup_loader('train', self.args.batch_size, self.args.max_seq_length)}
-        if monitor_validation and 'valid' in self.dataset_split.keys():
-            data_loader['valid'] = self.__setup_loader('valid', batch_size_validation, max_seq_length_validation)
+        data_loader = {
+            "train": self.__setup_loader(
+                "train", self.args.batch_size, self.args.max_seq_length
+            )
+        }
+        if monitor_validation and "valid" in self.dataset_split.keys():
+            data_loader["valid"] = self.__setup_loader(
+                "valid", batch_size_validation, max_seq_length_validation
+            )
         else:
-            data_loader['valid'] = None
+            data_loader["valid"] = None
 
-        if 'test' in self.dataset_split.keys():
-            data_loader['test'] = self.__setup_loader('test', batch_size_validation, max_seq_length_validation)
+        if "test" in self.dataset_split.keys():
+            data_loader["test"] = self.__setup_loader(
+                "test", batch_size_validation, max_seq_length_validation
+            )
         else:
-            data_loader['test'] = None
+            data_loader["test"] = None
 
         # start experiment
         start_time = time()
         best_f1_score = -1
-        logging.info('*** start training from step {}, epoch {} ***'.format(self.__step, self.__epoch))
+        logging.info(
+            "*** start training from step {}, epoch {} ***".format(
+                self.__step, self.__epoch
+            )
+        )
         try:
             while True:
-                if_training_finish = self.__epoch_train(data_loader['train'], writer=writer)
+                if_training_finish = self.__epoch_train(
+                    data_loader["train"], writer=writer
+                )
                 self.release_cache()
-                if data_loader['valid']:
+                if data_loader["valid"]:
                     try:
-                        metric = self.__epoch_valid(data_loader['valid'], writer=writer, prefix='valid')
-                        if metric['f1'] > best_f1_score:
-                            best_f1_score = metric['f1']
-                            self.model.save_pretrained(self.args.checkpoint_dir)
-                            self.transforms.tokenizer.save_pretrained(self.args.checkpoint_dir)
+                        metric = self.__epoch_valid(
+                            data_loader["valid"], writer=writer, prefix="valid"
+                        )
+                        if metric["f1"] > best_f1_score:
+                            best_f1_score = metric["f1"]
+                            if isinstance(self.model, torch.nn.DataParallel):
+                                self.model.module.save_pretrained(
+                                    self.args.checkpoint_dir
+                                )
+                            else:
+                                self.model.save_pretrained(self.args.checkpoint_dir)
+                            self.transforms.tokenizer.save_pretrained(
+                                self.args.checkpoint_dir
+                            )
                     except RuntimeError:
-                        logging.exception('*** RuntimeError: skip validation ***')
+                        logging.exception("*** RuntimeError: skip validation ***")
 
                     self.release_cache()
                 if if_training_finish:
                     break
                 self.__epoch += 1
         except RuntimeError:
-            logging.exception('*** RuntimeError ***')
+            logging.exception("*** RuntimeError ***")
 
         except KeyboardInterrupt:
-            logging.info('*** KeyboardInterrupt ***')
+            logging.info("*** KeyboardInterrupt ***")
 
-        logging.info('[training completed, {} sec in total]'.format(time() - start_time))
+        logging.info(
+            "[training completed, {} sec in total]".format(time() - start_time)
+        )
         if best_f1_score < 0:
             self.model.save_pretrained(self.args.checkpoint_dir)
             self.transforms.tokenizer.save_pretrained(self.args.checkpoint_dir)
 
         self.model.from_pretrained(self.args.checkpoint_dir)
-        if data_loader['test']:
-            self.__epoch_valid(data_loader['test'], writer=writer, prefix='test')
+        if data_loader["test"]:
+            self.__epoch_valid(data_loader["test"], writer=writer, prefix="test")
 
         writer.close()
-        logging.info('ckpt saved at {}'.format(self.args.checkpoint_dir))
+        logging.info("ckpt saved at {}".format(self.args.checkpoint_dir))
         self.args.is_trained = True
         self.__train_called = True
 
     def __epoch_train(self, data_loader, writer):
-        """ single epoch training: returning flag which is True if training has been completed """
+        """single epoch training: returning flag which is True if training has been completed"""
         self.model.train()
         for i, encode in enumerate(data_loader, 1):
-
             # update model
             encode = {k: v.to(self.device) for k, v in encode.items()}
             self.optimizer.zero_grad()
-            loss = self.model(**encode, return_dict=True)['loss']
+            loss = self.model(**encode, return_dict=True)["loss"]
             if self.n_gpu > 1:
                 loss = loss.mean()
             if self.args.fp16:
                 with self.scale_loss(loss, self.optimizer) as scaled_loss:
                     scaled_loss.backward()
-                    torch.nn.utils.clip_grad_norm_(self.master_params(self.optimizer), self.args.max_grad_norm)
+                    torch.nn.utils.clip_grad_norm_(
+                        self.master_params(self.optimizer), self.args.max_grad_norm
+                    )
             else:
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.args.max_grad_norm)
+                torch.nn.utils.clip_grad_norm_(
+                    self.model.parameters(), self.args.max_grad_norm
+                )
 
             # optimizer and scheduler step
             self.optimizer.step()
@@ -370,31 +482,39 @@ class TrainTransformersNER:
 
             # log instantaneous accuracy, loss, and learning rate
             inst_loss = loss.cpu().detach().item()
-            inst_lr = self.optimizer.param_groups[0]['lr']
+            inst_lr = self.optimizer.param_groups[0]["lr"]
             if writer:
-                writer.add_scalar('train/loss', inst_loss, self.__step)
-                writer.add_scalar('train/learning_rate', inst_lr, self.__step)
+                writer.add_scalar("train/loss", inst_loss, self.__step)
+                writer.add_scalar("train/learning_rate", inst_lr, self.__step)
             if self.__step % PROGRESS_INTERVAL == 0:
-                logging.info('[epoch %i] * (training step %i) loss: %.3f, lr: %0.8f'
-                             % (self.__epoch, self.__step, inst_loss, inst_lr))
+                logging.info(
+                    "[epoch %i] * (training step %i) loss: %.3f, lr: %0.8f"
+                    % (self.__epoch, self.__step, inst_loss, inst_lr)
+                )
             self.__step += 1
 
         if self.__epoch >= self.args.epochs:
-            logging.info('reached maximum epochs')
+            logging.info("reached maximum epochs")
             return True
 
         return False
 
-    def __epoch_valid(self, data_loader, prefix, writer=None, unseen_entity_set: set = None,
-                      entity_span_prediction: bool = False):
-        """ single epoch validation/test """
+    def __epoch_valid(
+        self,
+        data_loader,
+        prefix,
+        writer=None,
+        unseen_entity_set: set = None,
+        entity_span_prediction: bool = False,
+    ):
+        """single epoch validation/test"""
         # aggregate prediction and true label
         self.model.eval()
         seq_pred, seq_true = [], []
         for encode in data_loader:
             encode = {k: v.to(self.device) for k, v in encode.items()}
-            labels_tensor = encode.pop('labels')
-            logit = self.model(**encode, return_dict=True)['logits']
+            labels_tensor = encode.pop("labels")
+            logit = self.model(**encode, return_dict=True)["logits"]
             _true = labels_tensor.cpu().detach().int().tolist()
             _pred = torch.max(logit, 2)[1].cpu().detach().int().tolist()
             for b in range(len(_true)):
@@ -407,15 +527,21 @@ class TrainTransformersNER:
                         else:
                             __pred = self.id_to_label[_pred[b][s]]
                             if __pred in unseen_entity_set:
-                                _pred_list.append('O')
+                                _pred_list.append("O")
                             else:
                                 _pred_list.append(__pred)
                 assert len(_pred_list) == len(_true_list)
                 if len(_true_list) > 0:
                     if entity_span_prediction:
                         # ignore entity type and focus on entity position
-                        _true_list = [i if i == 'O' else '-'.join([i.split('-')[0], 'entity']) for i in _true_list]
-                        _pred_list = [i if i == 'O' else '-'.join([i.split('-')[0], 'entity']) for i in _pred_list]
+                        _true_list = [
+                            i if i == "O" else "-".join([i.split("-")[0], "entity"])
+                            for i in _true_list
+                        ]
+                        _pred_list = [
+                            i if i == "O" else "-".join([i.split("-")[0], "entity"])
+                            for i in _pred_list
+                        ]
                     seq_true.append(_true_list)
                     seq_pred.append(_pred_list)
 
@@ -428,18 +554,22 @@ class TrainTransformersNER:
 
         try:
             summary = classification_report(seq_true, seq_pred)
-            logging.info('[epoch {}] ({}) \n {}'.format(self.__epoch, prefix, summary))
-            logging.info('f1 score: {}'.format(metric['f1']))
-            logging.info('recall: {}'.format(metric['recall']))
-            logging.info('precision: {}'.format(metric['precision']))
+            logging.info("[epoch {}] ({}) \n {}".format(self.__epoch, prefix, summary))
+            logging.info("f1 score: {}".format(metric["f1"]))
+            logging.info("recall: {}".format(metric["recall"]))
+            logging.info("precision: {}".format(metric["precision"]))
         except Exception:
-            logging.exception('classification_report raises error')
-            summary = ''
-        metric['summary'] = summary
+            logging.exception("classification_report raises error")
+            summary = ""
+        metric["summary"] = summary
         if writer:
-            writer.add_scalar('{}/f1'.format(prefix), metric['f1'], self.__epoch)
-            writer.add_scalar('{}/recall'.format(prefix), metric['recall'], self.__epoch)
-            writer.add_scalar('{}/precision'.format(prefix), metric['precision'], self.__epoch)
+            writer.add_scalar("{}/f1".format(prefix), metric["f1"], self.__epoch)
+            writer.add_scalar(
+                "{}/recall".format(prefix), metric["recall"], self.__epoch
+            )
+            writer.add_scalar(
+                "{}/precision".format(prefix), metric["precision"], self.__epoch
+            )
         return metric
 
     def release_cache(self):

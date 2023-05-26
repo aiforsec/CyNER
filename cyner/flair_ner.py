@@ -9,9 +9,10 @@ class Flair(EntityExtraction):
     """
     Entity extraction using Flair NER model
     """
+
     def __init__(self, config):
         super().__init__(config)
-        self.tagger = SequenceTagger.load(config['model'])
+        self.tagger = SequenceTagger.load(config["model"])
 
     def train(self):
         pass
@@ -19,9 +20,16 @@ class Flair(EntityExtraction):
     def get_entities(self, text):
         sentence = Sentence(text)
         self.tagger.predict(sentence)
-        pred = sentence.to_dict(tag_type='ner')
         entities = []
-        for x in pred['entities']:
+        for span in sentence.get_spans("ner"):
             # 'labels' are formatted as [(TAG prob), ...]
-            entities.append(Entity(x['start_pos'], x['end_pos'], x['text'], x['labels'][0].value, x['labels'][0].score))
+            entities.append(
+                Entity(
+                    span.start_position,
+                    span.end_position,
+                    span.text,
+                    span.labels[0].value,
+                    span.labels[0].score,
+                )
+            )
         return entities

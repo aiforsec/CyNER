@@ -1,0 +1,31 @@
+npm packages caught serving TurkoRAT binaries that mimic nodejs
+Researchers have discovered multiple npm packages named after NodeJS libraries that even pack a Windows executable that resembles NodeJS but instead drops a sinister trojan.
+These packages, given their stealthiness and a very low detection rate, had been present on npm for over two months prior to their detection by the researchers.
+Not the node you're looking for
+Researchers at software security firm ReversingLabs have analyzed three npm packages that lurked on the npmjs.com registry for over two months.
+These packages, downloaded a little over 1,200 times in total, are called:
+"First published more than two months ago, nodejs-encrypt-agent appears at first glance to be a legitimate package," state ReversingLabs researchers in their report.
+"However,  discrepancies raised red flags with our researchers. Despite that, our first thought was still that this package couldn’t be malicious. If it were, it would surely have been noticed and removed by npm administrators."
+Although nodejs-encrypt-agent didn't initially sound alarms and even mirrored the functionality of legitimate packages like agent-base, there was more to it, the researchers discovered.
+npm page for malicious package nodejs-encrypt-agent
+npm page for malicious package nodejs-encrypt-agent (ReversingLabs)
+"There was, however, a small, but very significant difference: the nodejs-encrypt-agent package contained a portable executable (PE) file that, when analyzed by ReversingLabs was found to be malicious," write the researchers.
+The PE file being referred to is a Windows executable 'lib.exe,' about 100 MB in size that may not look suspicious right away.
+lib.exe present inside nodejs-encrypt-agent npm package
+lib.exe present inside nodejs-encrypt-agent npm package (BleepingComputer)
+The file closely resembles the real NodeJS application with regards to its PE headers and metadata, code and functionality. In fact, BleepingComputer observed, variants of 'lib.exe' executables present in certain versions of nodejs-encrypt-agent had a very low detection rate:
+Low VirusTotal Detection Rate for lib.exe
+Low VirusTotal detection rate for certain 'lib.exe' files (VirusTotal)
+The same also remains the case for the lib.exe specifically analyzed by ReversingLabs. VirusTotal analysis reveals how the executable mimics Node.js and contains identical metadata from the legitimate application.
+ReversingLabs researcher Igor Kramarić who analyzed the malicious package spotted that one or more JavaScript files within nodejs-encrypt-agent contained legitimate functionality but also had code that quietly ran the bundled 'lib.exe':
+EXE runs from within npm package
+npm package running the bundled 'lib.exe' (ReversingLabs)
+"As we observed above: there was little question that the PE discovered within the npm package was malicious," states Lucija Valentić of ReversingLabs.
+The malicious executable in question ran what's called TurkoRAT infostealer—a customizable "grabber" and credential stealer that is hard to detect.
+"The list of malicious or suspicious behaviors observed was long, with features designed to steal sensitive information from infected systems including user login credentials and crypto wallets as well as fool or defeat sandbox environments and debuggers that are used to analyze malicious files."
+TurkoRAT Code
+A snippet of TurkoRAT code packed within the EXE (ReversingLabs)
+Like nodejs-encrypt-agent, versions of nodejs-cookie-proxy-agent also dropped this trojan but introduced an additional step in between to evade detection.
+Instead of directly bundling 'lib.exe' within, nodejs-cookie-proxy-agent listed axios-proxy as a dependency and it is the latter that contained the malicious executable which would get pulled any time the former package was installed by a user.
+"This time, attackers disguised it as a dependency, axios-proxy, that was imported into every file found inside nodejs-cookie-proxy-agent versions 1.1.0, 1.2.0, 1.2.1 and 1.2.2," reveal the researchers.
+All malicious packages were removed from the npm registry shortly after their detection by ReversingLabs. But, the fact that these remained on npm for more than two months highlights the ongoing risk that unvetted open source packages can pose to software supply chain security, warn the researchers.

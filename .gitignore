@@ -13,3 +13,5 @@ ckpt*
 vocab
 apex
 cache
+
+.ckpt
