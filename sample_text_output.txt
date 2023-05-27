@@ -1,0 +1,307 @@
+# Input text
+
+npm packages caught serving TurkoRAT binaries that mimic nodejs
+Researchers have discovered multiple npm packages named after NodeJS libraries that even pack a Windows executable that resembles NodeJS but instead drops a sinister trojan.
+These packages, given their stealthiness and a very low detection rate, had been present on npm for over two months prior to their detection by the researchers.
+Not the node you're looking for
+Researchers at software security firm ReversingLabs have analyzed three npm packages that lurked on the npmjs.com registry for over two months.
+These packages, downloaded a little over 1,200 times in total, are called:
+"First published more than two months ago, nodejs-encrypt-agent appears at first glance to be a legitimate package," state ReversingLabs researchers in their report.
+"However,  discrepancies raised red flags with our researchers. Despite that, our first thought was still that this package couldn’t be malicious. If it were, it would surely have been noticed and removed by npm administrators."
+Although nodejs-encrypt-agent didn't initially sound alarms and even mirrored the functionality of legitimate packages like agent-base, there was more to it, the researchers discovered.
+npm page for malicious package nodejs-encrypt-agent
+npm page for malicious package nodejs-encrypt-agent (ReversingLabs)
+"There was, however, a small, but very significant difference: the nodejs-encrypt-agent package contained a portable executable (PE) file that, when analyzed by ReversingLabs was found to be malicious," write the researchers.
+The PE file being referred to is a Windows executable 'lib.exe,' about 100 MB in size that may not look suspicious right away.
+lib.exe present inside nodejs-encrypt-agent npm package
+lib.exe present inside nodejs-encrypt-agent npm package (BleepingComputer)
+The file closely resembles the real NodeJS application with regards to its PE headers and metadata, code and functionality. In fact, BleepingComputer observed, variants of 'lib.exe' executables present in certain versions of nodejs-encrypt-agent had a very low detection rate:
+Low VirusTotal Detection Rate for lib.exe
+Low VirusTotal detection rate for certain 'lib.exe' files (VirusTotal)
+The same also remains the case for the lib.exe specifically analyzed by ReversingLabs. VirusTotal analysis reveals how the executable mimics Node.js and contains identical metadata from the legitimate application.
+ReversingLabs researcher Igor Kramarić who analyzed the malicious package spotted that one or more JavaScript files within nodejs-encrypt-agent contained legitimate functionality but also had code that quietly ran the bundled 'lib.exe':
+EXE runs from within npm package
+npm package running the bundled 'lib.exe' (ReversingLabs)
+"As we observed above: there was little question that the PE discovered within the npm package was malicious," states Lucija Valentić of ReversingLabs.
+The malicious executable in question ran what's called TurkoRAT infostealer—a customizable "grabber" and credential stealer that is hard to detect.
+"The list of malicious or suspicious behaviors observed was long, with features designed to steal sensitive information from infected systems including user login credentials and crypto wallets as well as fool or defeat sandbox environments and debuggers that are used to analyze malicious files."
+TurkoRAT Code
+A snippet of TurkoRAT code packed within the EXE (ReversingLabs)
+Like nodejs-encrypt-agent, versions of nodejs-cookie-proxy-agent also dropped this trojan but introduced an additional step in between to evade detection.
+Instead of directly bundling 'lib.exe' within, nodejs-cookie-proxy-agent listed axios-proxy as a dependency and it is the latter that contained the malicious executable which would get pulled any time the former package was installed by a user.
+"This time, attackers disguised it as a dependency, axios-proxy, that was imported into every file found inside nodejs-cookie-proxy-agent versions 1.1.0, 1.2.0, 1.2.1 and 1.2.2," reveal the researchers.
+All malicious packages were removed from the npm registry shortly after their detection by ReversingLabs. But, the fact that these remained on npm for more than two months highlights the ongoing risk that unvetted open source packages can pose to software supply chain security, warn the researchers.
+
+# Model1: Only using pretrained transformers
+
+Mention: TurkoRAT, Class: Malware, Start: 28, End: 36, Confidence: 0.65
+Mention: Node, Class: Malware, Start: 126, End: 130, Confidence: 0.52
+Mention: Windows, Class: System, Start: 160, End: 167, Confidence: 0.86
+Mention: Node, Class: Malware, Start: 194, End: 198, Confidence: 0.54
+Mention: npm, Class: Malware, Start: 330, End: 333, Confidence: 0.48
+Mention: ing, Class: Organization, Start: 475, End: 478, Confidence: 0.34
+Mention: npmjs.com, Class: Indicator, Start: 535, End: 544, Confidence: 0.85
+Mention: nodejs, Class: Indicator, Start: 693, End: 699, Confidence: 0.54
+Mention: Revers, Class: Malware, Start: 773, End: 779, Confidence: 0.35
+Mention: ingLab, Class: Organization, Start: 779, End: 785, Confidence: 0.31
+Mention: nodejs, Class: Indicator, Start: 1054, End: 1060, Confidence: 0.61
+Mention: ReversingLab, Class: Malware, Start: 1336, End: 1348, Confidence: 0.41
+Mention: Reversing, Class: Malware, Start: 1512, End: 1521, Confidence: 0.47
+Mention: Lab, Class: Organization, Start: 1521, End: 1524, Confidence: 0.25
+Mention: Windows, Class: System, Start: 1612, End: 1619, Confidence: 0.83
+Mention: lib, Class: Indicator, Start: 1632, End: 1635, Confidence: 0.68
+Mention: lib, Class: Indicator, Start: 1704, End: 1707, Confidence: 0.81
+Mention: nodejs-encrypt-agent np, Class: Indicator, Start: 1727, End: 1750, Confidence: 0.62
+Mention: lib, Class: Indicator, Start: 1760, End: 1763, Confidence: 0.80
+Mention: nodejs-encrypt-agent, Class: Indicator, Start: 1783, End: 1803, Confidence: 0.63
+Mention: BleepingCom, Class: Malware, Start: 1968, End: 1979, Confidence: 0.55
+Mention: puter, Class: Organization, Start: 1979, End: 1984, Confidence: 0.24
+Mention: lib, Class: Indicator, Start: 2008, End: 2011, Confidence: 0.84
+Mention: exe, Class: Indicator, Start: 2012, End: 2015, Confidence: 0.49
+Mention: nodejs-encrypt, Class: Indicator, Start: 2060, End: 2074, Confidence: 0.77
+Mention: agent, Class: Indicator, Start: 2075, End: 2080, Confidence: 0.53
+Mention: lib, Class: Indicator, Start: 2146, End: 2149, Confidence: 0.87
+Mention: lib, Class: Indicator, Start: 2197, End: 2200, Confidence: 0.85
+Mention: exe, Class: Indicator, Start: 2201, End: 2204, Confidence: 0.51
+Mention: lib, Class: Indicator, Start: 2264, End: 2267, Confidence: 0.87
+Mention: Revers, Class: Malware, Start: 2297, End: 2303, Confidence: 0.28
+Mention: ingLab, Class: Organization, Start: 2303, End: 2309, Confidence: 0.21
+Mention: Virus, Class: Organization, Start: 2312, End: 2317, Confidence: 0.27
+Mention: Total, Class: System, Start: 2317, End: 2322, Confidence: 0.27
+Mention: Node.js, Class: Indicator, Start: 2366, End: 2373, Confidence: 0.49
+Mention: Re, Class: Organization, Start: 2439, End: 2441, Confidence: 0.27
+Mention: vers, Class: Malware, Start: 2441, End: 2445, Confidence: 0.23
+Mention: ingLab, Class: Organization, Start: 2445, End: 2451, Confidence: 0.37
+Mention: nodejs-encrypt, Class: Indicator, Start: 2562, End: 2576, Confidence: 0.70
+Mention: lib, Class: Indicator, Start: 2666, End: 2669, Confidence: 0.84
+Mention: exe, Class: Indicator, Start: 2670, End: 2673, Confidence: 0.64
+Mention: lib, Class: Indicator, Start: 2742, End: 2745, Confidence: 0.84
+Mention: vers, Class: Malware, Start: 2754, End: 2758, Confidence: 0.23
+Mention: ingLab, Class: Organization, Start: 2758, End: 2764, Confidence: 0.28
+Mention: Re, Class: Organization, Start: 2904, End: 2906, Confidence: 0.34
+Mention: vers, Class: Malware, Start: 2906, End: 2910, Confidence: 0.31
+Mention: ingLab, Class: Organization, Start: 2910, End: 2916, Confidence: 0.27
+Mention: TurkoRAT, Class: Malware, Start: 2974, End: 2982, Confidence: 0.72
+Mention: TurkoRAT, Class: Malware, Start: 3365, End: 3373, Confidence: 0.69
+Mention: Turko, Class: Malware, Start: 3392, End: 3397, Confidence: 0.79
+Mention: 'lib.exe, Class: Indicator, Start: 3628, End: 3636, Confidence: 0.64
+Mention: nodejs, Class: Indicator, Start: 3646, End: 3652, Confidence: 0.68
+Mention: cookie, Class: Indicator, Start: 3653, End: 3659, Confidence: 0.63
+Mention: prox, Class: Indicator, Start: 3660, End: 3664, Confidence: 0.54
+Mention: axios, Class: Indicator, Start: 3679, End: 3684, Confidence: 0.64
+Mention: nodejs-cookie, Class: Indicator, Start: 3956, End: 3969, Confidence: 0.64
+Mention: prox, Class: Indicator, Start: 3970, End: 3974, Confidence: 0.51
+Mention: Revers, Class: Malware, Start: 4138, End: 4144, Confidence: 0.31
+Mention: np, Class: Malware, Start: 4190, End: 4192, Confidence: 0.53
+
+# Model2: Using pretrained transformers and heuristics
+
+Mention: lib.exe, Class: Filename, Start: 1632, End: 1639, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 1704, End: 1711, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 1760, End: 1767, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2008, End: 2015, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2146, End: 2153, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2197, End: 2204, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2264, End: 2271, Confidence: 1.00
+Mention: Node.js, Class: Filename, Start: 2366, End: 2373, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2666, End: 2673, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2742, End: 2749, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 3629, End: 3636, Confidence: 1.00
+Mention:  npmjs.com, Class: Domain, Start: 534, End: 544, Confidence: 1.00
+Mention: TurkoRAT, Class: Malware, Start: 28, End: 36, Confidence: 0.65
+Mention: Node, Class: Malware, Start: 126, End: 130, Confidence: 0.52
+Mention: Windows, Class: System, Start: 160, End: 167, Confidence: 0.86
+Mention: Node, Class: Malware, Start: 194, End: 198, Confidence: 0.54
+Mention: npm, Class: Malware, Start: 330, End: 333, Confidence: 0.48
+Mention: ing, Class: Organization, Start: 475, End: 478, Confidence: 0.34
+Mention: nodejs, Class: Indicator, Start: 693, End: 699, Confidence: 0.54
+Mention: Revers, Class: Malware, Start: 773, End: 779, Confidence: 0.35
+Mention: ingLab, Class: Organization, Start: 779, End: 785, Confidence: 0.31
+Mention: nodejs, Class: Indicator, Start: 1054, End: 1060, Confidence: 0.61
+Mention: ReversingLab, Class: Malware, Start: 1336, End: 1348, Confidence: 0.41
+Mention: Reversing, Class: Malware, Start: 1512, End: 1521, Confidence: 0.47
+Mention: Lab, Class: Organization, Start: 1521, End: 1524, Confidence: 0.25
+Mention: Windows, Class: System, Start: 1612, End: 1619, Confidence: 0.83
+Mention: nodejs-encrypt-agent np, Class: Indicator, Start: 1727, End: 1750, Confidence: 0.62
+Mention: nodejs-encrypt-agent, Class: Indicator, Start: 1783, End: 1803, Confidence: 0.63
+Mention: BleepingCom, Class: Malware, Start: 1968, End: 1979, Confidence: 0.55
+Mention: puter, Class: Organization, Start: 1979, End: 1984, Confidence: 0.24
+Mention: nodejs-encrypt, Class: Indicator, Start: 2060, End: 2074, Confidence: 0.77
+Mention: agent, Class: Indicator, Start: 2075, End: 2080, Confidence: 0.53
+Mention: Revers, Class: Malware, Start: 2297, End: 2303, Confidence: 0.28
+Mention: ingLab, Class: Organization, Start: 2303, End: 2309, Confidence: 0.21
+Mention: Virus, Class: Organization, Start: 2312, End: 2317, Confidence: 0.27
+Mention: Total, Class: System, Start: 2317, End: 2322, Confidence: 0.27
+Mention: Re, Class: Organization, Start: 2439, End: 2441, Confidence: 0.27
+Mention: vers, Class: Malware, Start: 2441, End: 2445, Confidence: 0.23
+Mention: ingLab, Class: Organization, Start: 2445, End: 2451, Confidence: 0.37
+Mention: nodejs-encrypt, Class: Indicator, Start: 2562, End: 2576, Confidence: 0.70
+Mention: vers, Class: Malware, Start: 2754, End: 2758, Confidence: 0.23
+Mention: ingLab, Class: Organization, Start: 2758, End: 2764, Confidence: 0.28
+Mention: Re, Class: Organization, Start: 2904, End: 2906, Confidence: 0.34
+Mention: vers, Class: Malware, Start: 2906, End: 2910, Confidence: 0.31
+Mention: ingLab, Class: Organization, Start: 2910, End: 2916, Confidence: 0.27
+Mention: TurkoRAT, Class: Malware, Start: 2974, End: 2982, Confidence: 0.72
+Mention: TurkoRAT, Class: Malware, Start: 3365, End: 3373, Confidence: 0.69
+Mention: Turko, Class: Malware, Start: 3392, End: 3397, Confidence: 0.79
+Mention: nodejs, Class: Indicator, Start: 3646, End: 3652, Confidence: 0.68
+Mention: cookie, Class: Indicator, Start: 3653, End: 3659, Confidence: 0.63
+Mention: prox, Class: Indicator, Start: 3660, End: 3664, Confidence: 0.54
+Mention: axios, Class: Indicator, Start: 3679, End: 3684, Confidence: 0.64
+Mention: nodejs-cookie, Class: Indicator, Start: 3956, End: 3969, Confidence: 0.64
+Mention: prox, Class: Indicator, Start: 3970, End: 3974, Confidence: 0.51
+Mention: Revers, Class: Malware, Start: 4138, End: 4144, Confidence: 0.31
+Mention: np, Class: Malware, Start: 4190, End: 4192, Confidence: 0.53
+
+# Model3:  Using pretrained transformers with heuristics and Flair
+
+Mention: lib.exe, Class: Filename, Start: 1632, End: 1639, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 1704, End: 1711, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 1760, End: 1767, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2008, End: 2015, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2146, End: 2153, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2197, End: 2204, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2264, End: 2271, Confidence: 1.00
+Mention: Node.js, Class: Filename, Start: 2366, End: 2373, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2666, End: 2673, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2742, End: 2749, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 3629, End: 3636, Confidence: 1.00
+Mention:  npmjs.com, Class: Domain, Start: 534, End: 544, Confidence: 1.00
+Mention: TurkoRAT, Class: Malware, Start: 28, End: 36, Confidence: 0.65
+Mention: Node, Class: Malware, Start: 126, End: 130, Confidence: 0.52
+Mention: Windows, Class: System, Start: 160, End: 167, Confidence: 0.86
+Mention: Node, Class: Malware, Start: 194, End: 198, Confidence: 0.54
+Mention: npm, Class: Malware, Start: 330, End: 333, Confidence: 0.48
+Mention: ing, Class: Organization, Start: 475, End: 478, Confidence: 0.34
+Mention: nodejs, Class: Indicator, Start: 693, End: 699, Confidence: 0.54
+Mention: Revers, Class: Malware, Start: 773, End: 779, Confidence: 0.35
+Mention: ingLab, Class: Organization, Start: 779, End: 785, Confidence: 0.31
+Mention: nodejs, Class: Indicator, Start: 1054, End: 1060, Confidence: 0.61
+Mention: ReversingLab, Class: Malware, Start: 1336, End: 1348, Confidence: 0.41
+Mention: Reversing, Class: Malware, Start: 1512, End: 1521, Confidence: 0.47
+Mention: Lab, Class: Organization, Start: 1521, End: 1524, Confidence: 0.25
+Mention: Windows, Class: System, Start: 1612, End: 1619, Confidence: 0.83
+Mention: nodejs-encrypt-agent np, Class: Indicator, Start: 1727, End: 1750, Confidence: 0.62
+Mention: nodejs-encrypt-agent, Class: Indicator, Start: 1783, End: 1803, Confidence: 0.63
+Mention: BleepingCom, Class: Malware, Start: 1968, End: 1979, Confidence: 0.55
+Mention: puter, Class: Organization, Start: 1979, End: 1984, Confidence: 0.24
+Mention: nodejs-encrypt, Class: Indicator, Start: 2060, End: 2074, Confidence: 0.77
+Mention: agent, Class: Indicator, Start: 2075, End: 2080, Confidence: 0.53
+Mention: Revers, Class: Malware, Start: 2297, End: 2303, Confidence: 0.28
+Mention: ingLab, Class: Organization, Start: 2303, End: 2309, Confidence: 0.21
+Mention: Virus, Class: Organization, Start: 2312, End: 2317, Confidence: 0.27
+Mention: Total, Class: System, Start: 2317, End: 2322, Confidence: 0.27
+Mention: Re, Class: Organization, Start: 2439, End: 2441, Confidence: 0.27
+Mention: vers, Class: Malware, Start: 2441, End: 2445, Confidence: 0.23
+Mention: ingLab, Class: Organization, Start: 2445, End: 2451, Confidence: 0.37
+Mention: nodejs-encrypt, Class: Indicator, Start: 2562, End: 2576, Confidence: 0.70
+Mention: vers, Class: Malware, Start: 2754, End: 2758, Confidence: 0.23
+Mention: ingLab, Class: Organization, Start: 2758, End: 2764, Confidence: 0.28
+Mention: Re, Class: Organization, Start: 2904, End: 2906, Confidence: 0.34
+Mention: vers, Class: Malware, Start: 2906, End: 2910, Confidence: 0.31
+Mention: ingLab, Class: Organization, Start: 2910, End: 2916, Confidence: 0.27
+Mention: TurkoRAT, Class: Malware, Start: 2974, End: 2982, Confidence: 0.72
+Mention: TurkoRAT, Class: Malware, Start: 3365, End: 3373, Confidence: 0.69
+Mention: Turko, Class: Malware, Start: 3392, End: 3397, Confidence: 0.79
+Mention: nodejs, Class: Indicator, Start: 3646, End: 3652, Confidence: 0.68
+Mention: cookie, Class: Indicator, Start: 3653, End: 3659, Confidence: 0.63
+Mention: prox, Class: Indicator, Start: 3660, End: 3664, Confidence: 0.54
+Mention: axios, Class: Indicator, Start: 3679, End: 3684, Confidence: 0.64
+Mention: nodejs-cookie, Class: Indicator, Start: 3956, End: 3969, Confidence: 0.64
+Mention: prox, Class: Indicator, Start: 3970, End: 3974, Confidence: 0.51
+Mention: Revers, Class: Malware, Start: 4138, End: 4144, Confidence: 0.31
+Mention: np, Class: Malware, Start: 4190, End: 4192, Confidence: 0.53
+Mention: NodeJS, Class: MISC, Start: 1871, End: 1877, Confidence: 0.82
+Mention: VirusTotal, Class: MISC, Start: 2213, End: 2223, Confidence: 0.90
+Mention: Igor Kramarić, Class: PER, Start: 2464, End: 2477, Confidence: 1.00
+Mention: JavaScript, Class: MISC, Start: 2538, End: 2548, Confidence: 0.96
+Mention: EXE, Class: MISC, Start: 3424, End: 3427, Confidence: 0.68
+
+# Model4: Using pretrained transformers with heuristics and Spicy and Flair
+
+Mention: lib.exe, Class: Filename, Start: 1632, End: 1639, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 1704, End: 1711, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 1760, End: 1767, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2008, End: 2015, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2146, End: 2153, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2197, End: 2204, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2264, End: 2271, Confidence: 1.00
+Mention: Node.js, Class: Filename, Start: 2366, End: 2373, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2666, End: 2673, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 2742, End: 2749, Confidence: 1.00
+Mention: lib.exe, Class: Filename, Start: 3629, End: 3636, Confidence: 1.00
+Mention:  npmjs.com, Class: Domain, Start: 534, End: 544, Confidence: 1.00
+Mention: TurkoRAT, Class: Malware, Start: 28, End: 36, Confidence: 0.65
+Mention: Node, Class: Malware, Start: 126, End: 130, Confidence: 0.52
+Mention: Windows, Class: System, Start: 160, End: 167, Confidence: 0.86
+Mention: Node, Class: Malware, Start: 194, End: 198, Confidence: 0.54
+Mention: npm, Class: Malware, Start: 330, End: 333, Confidence: 0.48
+Mention: ing, Class: Organization, Start: 475, End: 478, Confidence: 0.34
+Mention: nodejs, Class: Indicator, Start: 693, End: 699, Confidence: 0.54
+Mention: Revers, Class: Malware, Start: 773, End: 779, Confidence: 0.35
+Mention: ingLab, Class: Organization, Start: 779, End: 785, Confidence: 0.31
+Mention: nodejs, Class: Indicator, Start: 1054, End: 1060, Confidence: 0.61
+Mention: ReversingLab, Class: Malware, Start: 1336, End: 1348, Confidence: 0.41
+Mention: Reversing, Class: Malware, Start: 1512, End: 1521, Confidence: 0.47
+Mention: Lab, Class: Organization, Start: 1521, End: 1524, Confidence: 0.25
+Mention: Windows, Class: System, Start: 1612, End: 1619, Confidence: 0.83
+Mention: nodejs-encrypt-agent np, Class: Indicator, Start: 1727, End: 1750, Confidence: 0.62
+Mention: nodejs-encrypt-agent, Class: Indicator, Start: 1783, End: 1803, Confidence: 0.63
+Mention: BleepingCom, Class: Malware, Start: 1968, End: 1979, Confidence: 0.55
+Mention: puter, Class: Organization, Start: 1979, End: 1984, Confidence: 0.24
+Mention: nodejs-encrypt, Class: Indicator, Start: 2060, End: 2074, Confidence: 0.77
+Mention: agent, Class: Indicator, Start: 2075, End: 2080, Confidence: 0.53
+Mention: Revers, Class: Malware, Start: 2297, End: 2303, Confidence: 0.28
+Mention: ingLab, Class: Organization, Start: 2303, End: 2309, Confidence: 0.21
+Mention: Virus, Class: Organization, Start: 2312, End: 2317, Confidence: 0.27
+Mention: Total, Class: System, Start: 2317, End: 2322, Confidence: 0.27
+Mention: Re, Class: Organization, Start: 2439, End: 2441, Confidence: 0.27
+Mention: vers, Class: Malware, Start: 2441, End: 2445, Confidence: 0.23
+Mention: ingLab, Class: Organization, Start: 2445, End: 2451, Confidence: 0.37
+Mention: nodejs-encrypt, Class: Indicator, Start: 2562, End: 2576, Confidence: 0.70
+Mention: vers, Class: Malware, Start: 2754, End: 2758, Confidence: 0.23
+Mention: ingLab, Class: Organization, Start: 2758, End: 2764, Confidence: 0.28
+Mention: Re, Class: Organization, Start: 2904, End: 2906, Confidence: 0.34
+Mention: vers, Class: Malware, Start: 2906, End: 2910, Confidence: 0.31
+Mention: ingLab, Class: Organization, Start: 2910, End: 2916, Confidence: 0.27
+Mention: TurkoRAT, Class: Malware, Start: 2974, End: 2982, Confidence: 0.72
+Mention: TurkoRAT, Class: Malware, Start: 3365, End: 3373, Confidence: 0.69
+Mention: Turko, Class: Malware, Start: 3392, End: 3397, Confidence: 0.79
+Mention: nodejs, Class: Indicator, Start: 3646, End: 3652, Confidence: 0.68
+Mention: cookie, Class: Indicator, Start: 3653, End: 3659, Confidence: 0.63
+Mention: prox, Class: Indicator, Start: 3660, End: 3664, Confidence: 0.54
+Mention: axios, Class: Indicator, Start: 3679, End: 3684, Confidence: 0.64
+Mention: nodejs-cookie, Class: Indicator, Start: 3956, End: 3969, Confidence: 0.64
+Mention: prox, Class: Indicator, Start: 3970, End: 3974, Confidence: 0.51
+Mention: Revers, Class: Malware, Start: 4138, End: 4144, Confidence: 0.31
+Mention: np, Class: Malware, Start: 4190, End: 4192, Confidence: 0.53
+Mention: NodeJS, Class: MISC, Start: 1871, End: 1877, Confidence: 0.82
+Mention: VirusTotal, Class: MISC, Start: 2213, End: 2223, Confidence: 0.90
+Mention: Igor Kramarić, Class: PER, Start: 2464, End: 2477, Confidence: 1.00
+Mention: JavaScript, Class: MISC, Start: 2538, End: 2548, Confidence: 0.96
+Mention: EXE, Class: MISC, Start: 3424, End: 3427, Confidence: 0.68
+Mention: npm, Class: PERSON, Start: 0, End: 3, Confidence: 1.00
+Mention: trojan, Class: PERSON, Start: 230, End: 236, Confidence: 1.00
+Mention: two months, Class: DATE, Start: 343, End: 353, Confidence: 1.00
+Mention: three, Class: CARDINAL, Start: 497, End: 502, Confidence: 1.00
+Mention: over two months, Class: DATE, Start: 558, End: 573, Confidence: 1.00
+Mention: a little over 1,200, Class: CARDINAL, Start: 602, End: 621, Confidence: 1.00
+Mention: First, Class: ORDINAL, Start: 651, End: 656, Confidence: 1.00
+Mention: more than two months ago, Class: DATE, Start: 667, End: 691, Confidence: 1.00
+Mention: first, Class: ORDINAL, Start: 725, End: 730, Confidence: 1.00
+Mention: first, Class: ORDINAL, Start: 898, End: 903, Confidence: 1.00
+Mention: PE, Class: ORG, Start: 1581, End: 1583, Confidence: 1.00
+Mention: about 100, Class: CARDINAL, Start: 1642, End: 1651, Confidence: 1.00
+Mention: npm, Class: PERSON, Start: 1804, End: 1807, Confidence: 1.00
+Mention: BleepingComputer, Class: ORG, Start: 1817, End: 1833, Confidence: 1.00
+Mention: PE, Class: ORG, Start: 1910, End: 1912, Confidence: 1.00
+Mention: metadata, Class: PERSON, Start: 1925, End: 1933, Confidence: 1.00
+Mention: VirusTotal, Class: ORG, Start: 2158, End: 2168, Confidence: 1.00
+Mention: one, Class: CARDINAL, Start: 2526, End: 2529, Confidence: 1.00
+Mention: PE, Class: ORG, Start: 2825, End: 2827, Confidence: 1.00
+Mention: Lucija Valentić, Class: PERSON, Start: 2885, End: 2900, Confidence: 1.00
+Mention: ReversingLabs, Class: ORG, Start: 3429, End: 3442, Confidence: 1.00
+Mention: 1.1.0, Class: CARDINAL, Start: 3991, End: 3996, Confidence: 1.00
+Mention: 1.2.0, Class: CARDINAL, Start: 3998, End: 4003, Confidence: 1.00
+Mention: 1.2.1, Class: DATE, Start: 4005, End: 4010, Confidence: 1.00
+Mention: more than two months, Class: DATE, Start: 4198, End: 4218, Confidence: 1.00
