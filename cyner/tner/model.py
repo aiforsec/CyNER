@@ -403,6 +403,16 @@ class TrainTransformersNER:
                 self.__step, self.__epoch
             )
         )
+        save_pretrained = (
+            self.model.module.save_pretrained
+            if isinstance(self.model, torch.nn.DataParallel)
+            else self.model.save_pretrained
+        )
+        from_pretrained = (
+            self.model.module.from_pretrained
+            if isinstance(self.model, torch.nn.DataParallel)
+            else self.model.from_pretrained
+        )
         try:
             while True:
                 if_training_finish = self.__epoch_train(
@@ -416,12 +426,7 @@ class TrainTransformersNER:
                         )
                         if metric["f1"] > best_f1_score:
                             best_f1_score = metric["f1"]
-                            if isinstance(self.model, torch.nn.DataParallel):
-                                self.model.module.save_pretrained(
-                                    self.args.checkpoint_dir
-                                )
-                            else:
-                                self.model.save_pretrained(self.args.checkpoint_dir)
+                            save_pretrained(self.args.checkpoint_dir)
                             self.transforms.tokenizer.save_pretrained(
                                 self.args.checkpoint_dir
                             )
@@ -442,10 +447,10 @@ class TrainTransformersNER:
             "[training completed, {} sec in total]".format(time() - start_time)
         )
         if best_f1_score < 0:
-            self.model.save_pretrained(self.args.checkpoint_dir)
+            save_pretrained(self.args.checkpoint_dir)
             self.transforms.tokenizer.save_pretrained(self.args.checkpoint_dir)
 
-        self.model.from_pretrained(self.args.checkpoint_dir)
+        from_pretrained(self.args.checkpoint_dir)
         if data_loader["test"]:
             self.__epoch_valid(data_loader["test"], writer=writer, prefix="test")
 
